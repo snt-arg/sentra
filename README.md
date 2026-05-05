@@ -1,10 +1,10 @@
-# Sentra
+# ⚜️ Sentra ⚜️
 
 <!-- Shields.io Badges -->
 
 [![Static Badge](https://img.shields.io/badge/Docker-availabe-%23B31B1B?style=flat&logo=docker&logoColor=%232496ED&color=%232496ED)](/docker/README.md)
 
-⚜️ GenAI-powered vision-language grounding for vS-Graphs
+**Sentra** is a modular, ROS2-based framework that provides a lightweight **Generative AI** core for semantic understanding and question-answering in vS-Graphs. It uses **Vision-Language Models (VLMs)** for extracting visual embeddings and enables context-aware reasoning through a **Retrieval-Augmented Generation (RAG)** pipeline. Sentra is designed to be easily extendable, allowing users to integrate new VLMs and reasoning modules as needed.
 
 ## 🧠 Architecture
 

@@ -117,6 +117,12 @@ WORKDIR /home/$USERNAME/workspace/src
 # -------------------
 RUN --mount=type=ssh git clone git@github.com:snt-arg/sentra.git
 
+# ----------------------
+# Install Python Dependencies
+# ----------------------
+WORKDIR /home/$USERNAME/workspace/src/sentra/src/
+RUN pip3 install --break-system-packages --ignore-installed -r requirements.txt
+
 # ----------------
 # Build Workspace
 # ----------------

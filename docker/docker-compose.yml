@@ -4,14 +4,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ssh:
-      - default
-    args:
-      USERNAME: $USERNAME
-      USER_UID: 1000
-      USER_GID: 1000
+      ssh:
+        - default
+      args:
+        USERNAME: $USERNAME
+        USER_UID: 1000
+        USER_GID: 1000
     container_name: sentra_ros2
     environment:
+      ROS_DOMAIN_ID: 64
       DISPLAY: $DISPLAY
       XAUTHORITY: $XAUTHORITY
       SSH_AUTH_SOCK: $SSH_AUTH_SOCK
@@ -25,6 +26,23 @@ services:
     devices:
       - /dev/bus/usb:/dev/bus/usb
     volumes:
+      - /dev:/dev:rw
       - $XAUTHORITY:$XAUTHORITY:rw
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - $SSH_AUTH_SOCK:$SSH_AUTH_SOCK
+      - $SSH_AUTH_SOCK:$SSH_AUTH_SOCK:rw
+      - ~/.gitconfig:/home/$USERNAME/.gitconfig_local
+      # Working Directory - Sentra (** MODIFY **)
+      - "[YOUR_PATH]:/home/$USERNAME/workspace/src/sentra:rw"
+    network_mode: "host"
+    command:
+      tail -f /dev/null
+    depends_on:
+      - volume-init
+  volume-init:
+    image: busybox
+    command: ["chown", "-R", "1000:1000", "/workspace/src/sentra"]
+    volumes:
+      # Working Directory - Sentra (** MODIFY **)
+      - "[YOUR_PATH]:/home/$USERNAME/workspace/src/sentra:rw"
+    entrypoint: ""
+    restart: "no"

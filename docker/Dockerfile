@@ -14,6 +14,7 @@ ENV CUDA_HOME=/usr/local/cuda \
     LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
     ROS_DISTRO=jazzy \
+    PYTHONUNBUFFERED=1 \
     PIP_BREAK_SYSTEM_PACKAGES=1
 
 # ----------------------

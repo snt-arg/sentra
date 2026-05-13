@@ -9,15 +9,21 @@ from sentra_ros.core.utils import cleanMemory, monitorParams
 class Sentra(Node):
     def __init__(self):
         # Variables
+        super().__init__(
+            "sentra_ros",
+            allow_undeclared_parameters=True,
+            automatically_declare_parameters_from_overrides=True,
+        )
         self.pkg_share_directory = get_package_share_directory("sentra_ros")
-        super().__init__("sentra")
         # Initial checks
-        monitorParams()
-        cleanMemory()
-    
-    def core(self):
+        monitorParams(self.get_logger())
+        cleanMemory(self.get_logger())
+        # Run core loop
+        self.timer = self.create_timer(1.0, self.process)
+
+    def process(self):
         # Main loop
-        print("Running core loop...")
+        self.get_logger().info("Running core loop...")
 
 
 def main(args=None):
@@ -28,13 +34,11 @@ def main(args=None):
     # Run the node
     try:
         node = Sentra()
-    #     rclpy.spin(node)
+        rclpy.spin(node)
     except KeyboardInterrupt:
-        node.get_logger().info(
-            '[Sentra] Node interrupted by user! Exiting...')
+        node.get_logger().info("[Sentra] Node interrupted by user! Exiting...")
     except Exception as e:
-        rclpy.logging.get_logger().error(
-            f'[Sentra] Unhandled exception: {e}')
+        node.get_logger().error(f"[Sentra] Unhandled exception: {e}")
     finally:
         if node is not None:
             node.destroy_node()

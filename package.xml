@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>sentra_ros</name>
+  <version>1.0.0</version>
+  <description>Vision-Language Grounding for vS-Graphs (ROS2)</description>
+
+  <!-- Maintainers -->
+  <maintainer email="a.tourani1991@gmail.com">Ali Tourani</maintainer>
+
+  <!-- License -->
+  <license>GPLv3</license>
+
+  <!-- Build system -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>sensor_msgs</depend>
+
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_copyright</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

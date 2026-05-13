@@ -1,0 +1,4 @@
+sentra_ros:
+  ros__parameters:
+    # General Parameters
+    log_level: "info"

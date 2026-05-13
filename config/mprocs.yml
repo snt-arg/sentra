@@ -2,3 +2,13 @@ procs:
   ---- Sentra Framework ----:
     shell: ''
     autostart: false
+  Sentra Core:
+    shell: 'bash -c "source /opt/ros/jazzy/setup.bash && 
+      source ~/workspace/install/setup.bash && 
+      ros2 launch sentra_ros sentra.launch.py"'
+    autostart: true
+  Build Sentra:
+    shell: 'bash -c "source /opt/ros/jazzy/setup.bash && 
+      source ~/workspace/install/setup.bash && cd ~/workspace &&
+      colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select sentra_ros"'
+    autostart: false

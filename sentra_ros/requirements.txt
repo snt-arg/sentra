@@ -1,1 +1,2 @@
 pandas==3.0.2
+dearpygui==2.2

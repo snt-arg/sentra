@@ -34,7 +34,7 @@ setup(
     entry_points={
         "console_scripts": ["sentra_node=sentra_ros.sentra:main"],
     },
-    install_requires=parseRequirements("src/requirements.txt"),
+    install_requires=parseRequirements("sentra_ros/requirements.txt"),
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + pkg]),
         ("share/" + pkg, ["package.xml"]),

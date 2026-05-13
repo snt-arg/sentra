@@ -115,21 +115,21 @@ WORKDIR /home/$USERNAME/workspace/src
 # -------------------
 # Clone Repositories
 # -------------------
-
 RUN --mount=type=ssh git clone git@github.com:snt-arg/sentra.git
 
 # ----------------------
 # Install Python Dependencies
 # ----------------------
 WORKDIR /home/$USERNAME/workspace/src/sentra/sentra_ros/
-RUN pip3 install --break-system-packages --ignore-installed -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # ----------------
 # Build Workspace
 # ----------------
 WORKDIR /home/$USERNAME/workspace/
-RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash && rosdep install --from-paths src --ignore-src -r -y"
-RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release"
+RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash && \
+    rosdep install --from-paths src --ignore-src -r -y && \
+    colcon build --symlink-install"
 
 # ---------
 # Clean Up

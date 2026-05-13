@@ -10,15 +10,31 @@
 
 TBD
 
-## 🔨 Installation & Configuration
-
-TBD
-
 ## 🚀 Getting Started
 
-TBD
+For installation, you need an **Ubuntu 24.04** system with **ROS2 Jazzy** installed.
+Clone the repository and install the required dependencies in the [`requirements.txt`](/sentra_ros/requirements.txt) file.
+Then, build the ROS2 workspace using `colcon build` and run the framework using the provided launch files.
 
-## 🐋 Docker
+```bash
+# Clone the repository
+git clone git@github.com:snt-arg/sentra.git
+
+# Install Python dependencies
+cd sentra && pip3 install --no-cache-dir -r sentra_ros/requirements.txt
+
+# Build the ROS2 workspace
+cd ~/workspace
+source /opt/ros/$ROS_DISTRO/setup.bash
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+# Run the Sentra framework
+source install/setup.bash
+ros2 launch sentra_ros sentra.launch.py
+```
+
+### 🐋 Docker
 
 For a fully reproducible, environment-independent setup, see the [Docker](/docker) section.
 

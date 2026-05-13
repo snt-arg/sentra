@@ -89,6 +89,7 @@ RUN pip3 install --extra-index-url https://download.pytorch.org/whl/cu121 \
     torchvision \
     networkx==3.1
 RUN apt remove --purge python3-typing-extensions -y
+RUN pip3 install typing-extensions==4.11.0
 
 # ---------
 # SSH Keys

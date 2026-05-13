@@ -1,5 +1,6 @@
 # import rclpy
 
+
 def main(args=None):
     print("Hello, Sentra!")
     # rclpy.init(args=args)
@@ -11,5 +12,5 @@ def main(args=None):
     # rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

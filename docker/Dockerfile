@@ -84,44 +84,24 @@ RUN groupadd --gid $USER_GID $USERNAME \
 # -----------------------
 # Setup Python Libraries
 # -----------------------
-RUN pip3 install networkx==3.1
 RUN pip3 install --extra-index-url https://download.pytorch.org/whl/cu121 \
     torch \
-    torchvision
+    torchvision \
+    networkx==3.1
 RUN apt remove --purge python3-typing-extensions -y
-RUN pip3 install typing-extensions==4.11.0
 
 # ---------
 # SSH Keys
 # ---------
 RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
 
-# ---------
-# CMake
-# ---------
-ARG version=3.22
-ARG build=1
-WORKDIR /tmp
-RUN wget https://cmake.org/files/v$version/cmake-$version.$build.tar.gz
-
-RUN tar -xzvf cmake-$version.$build.tar.gz
-WORKDIR /tmp/cmake-$version.$build
-RUN ./bootstrap
-RUN make -j10
-RUN make install
-
+# ----------------
+# Workspace Setup
+# ----------------
 WORKDIR /home/$USERNAME/workspace/src
-
-# -------------------
-# Clone Repositories
-# -------------------
 RUN --mount=type=ssh git clone git@github.com:snt-arg/sentra.git
-
-# ----------------------
-# Install Python Dependencies
-# ----------------------
-WORKDIR /home/$USERNAME/workspace/src/sentra/sentra_ros/
-RUN pip3 install --no-cache-dir -r requirements.txt
+WORKDIR /home/$USERNAME/workspace/src/sentra
+RUN pip3 install --no-cache-dir -r sentra_ros/requirements.txt
 
 # ----------------
 # Build Workspace
@@ -129,7 +109,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 WORKDIR /home/$USERNAME/workspace/
 RUN /bin/bash -c "source /opt/ros/$ROS_DISTRO/setup.bash && \
     rosdep install --from-paths src --ignore-src -r -y && \
-    colcon build --symlink-install"
+    colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release"
 
 # ---------
 # Clean Up

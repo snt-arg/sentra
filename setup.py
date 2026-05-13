@@ -28,8 +28,6 @@ setup(
     url="https://github.com/snt-arg/sentra",
     packages=find_packages(exclude=["docs"]),
     maintainer_email="a.tourani1991@gmail.com",
-    long_description_content_type="text/markdown",
-    long_description=open("README.md", encoding="utf-8").read(),
     description="⚜️ GenAI-powered vision-language grounding for vS-Graphs ⚜️",
     entry_points={
         "console_scripts": ["sentra_node=sentra_ros.sentra:main"],

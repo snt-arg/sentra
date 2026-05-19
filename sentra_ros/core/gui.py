@@ -1,4 +1,5 @@
 import dearpygui.dearpygui as dpg
+from sentra_ros.core.utils import uiColors
 
 
 class SentraGUI:
@@ -20,12 +21,15 @@ class SentraGUI:
                 width=500,
                 height=500,
                 tag="MainWindow",
+                no_resize=True,
+                no_move=True,
+                no_collapse=True,
             ):
                 # Scrollable chat history area
                 with dpg.child_window(height=450, tag="chat_history"):
                     dpg.add_text(
                         "[Sentra]: I am ready for your queries...",
-                        color=[100, 200, 100],
+                        color=uiColors["orange"],
                     )
 
                 dpg.add_separator()
@@ -36,7 +40,6 @@ class SentraGUI:
                         hint="Type your query here...",
                         tag="user_input",
                         width=415,
-                        indent=5,
                     )
                     dpg.add_button(label="Send", callback=self.on_submit, width=80)
         except Exception as e:
@@ -55,13 +58,15 @@ class SentraGUI:
             return
 
         # Display the User's query in the chat log
-        dpg.add_text(f"[User]: {query}", parent="chat_history")
+        dpg.add_text(f"[Query]: {query}", parent="chat_history", wrap=480)
         dpg.set_value("user_input", "")
 
         # Route processing through the ROS node
         self.node.process_query(query, self)
 
-    def append_response(self, sender_name, text, color=[100, 150, 255]):
+    def append_response(self, sender, text, color=uiColors["orange"]):
         """Helper method so the ROS node can pass back AI responses cleanly"""
-        dpg.add_text(f"[{sender_name}]: {text}", parent="chat_history", color=color)
+        dpg.add_text(
+            f"[{sender}]: {text}", parent="chat_history", wrap=480, color=color
+        )
         dpg.set_y_scroll("chat_history", dpg.get_y_scroll_max("chat_history"))

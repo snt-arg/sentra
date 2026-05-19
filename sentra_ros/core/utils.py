@@ -2,6 +2,11 @@ import gc
 import torch
 import torchvision
 
+uiColors = {
+    "pink": [245, 40, 130],
+    "orange": [245, 135, 40],
+}
+
 
 def monitorParams(logger=None):
     """

@@ -2,7 +2,7 @@ import gc
 import torch
 import torchvision
 
-uiColors = {
+ui_colors = {
     "pink": [245, 40, 130],
     "orange": [245, 135, 40],
 }

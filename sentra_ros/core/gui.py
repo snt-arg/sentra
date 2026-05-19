@@ -1,5 +1,5 @@
 import dearpygui.dearpygui as dpg
-from sentra_ros.core.utils import uiColors
+from sentra_ros.core.utils import ui_colors
 
 
 class SentraGUI:
@@ -29,7 +29,7 @@ class SentraGUI:
                 with dpg.child_window(height=450, tag="chat_history"):
                     dpg.add_text(
                         "[Sentra]: I am ready for your queries...",
-                        color=uiColors["orange"],
+                        color=ui_colors["orange"],
                     )
 
                 dpg.add_separator()
@@ -64,7 +64,7 @@ class SentraGUI:
         # Route processing through the ROS node
         self.node.process_query(query, self)
 
-    def append_response(self, sender, text, color=uiColors["orange"]):
+    def append_response(self, sender, text, color=ui_colors["orange"]):
         """Helper method so the ROS node can pass back AI responses cleanly"""
         dpg.add_text(
             f"[{sender}]: {text}", parent="chat_history", wrap=480, color=color

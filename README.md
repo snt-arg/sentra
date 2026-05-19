@@ -8,7 +8,7 @@
 
 ## 🧠 Architecture
 
-TBD
+![Sentra Architecture](docs/Overall.png)
 
 ## 🚀 Getting Started
 

@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 import dearpygui.dearpygui as dpg
 from sentra_ros.core.gui import SentraGUI
+from sentra_ros.core.embedding import initLLMModel
 from ament_index_python import get_package_share_directory
 from sentra_ros.core.utils import cleanMemory, monitorParams
 
@@ -11,16 +12,26 @@ from sentra_ros.core.utils import cleanMemory, monitorParams
 class Sentra(Node):
     def __init__(self):
         # Variables
+        self.pkg_share_directory = get_package_share_directory("sentra_ros")
         super().__init__(
             "sentra_ros",
             allow_undeclared_parameters=True,
             automatically_declare_parameters_from_overrides=True,
         )
-        self.pkg_share_directory = get_package_share_directory("sentra_ros")
+
+        # Load parameters
+        init_check = self.get_parameter("init_check").get_parameter_value().bool_value
+        self.llm_model = (
+            self.get_parameter("llm_model").get_parameter_value().string_value
+        )
 
         # Initial checks
-        monitorParams(self.get_logger())
-        cleanMemory(self.get_logger())
+        if init_check:
+            monitorParams(self.get_logger())
+            cleanMemory(self.get_logger())
+
+        # Initialize LLM model
+        initLLMModel(self.llm_model, self.get_logger())
 
     def process_query(self, query, gui_handle):
         self.get_logger().info(f"Processing query: {query}")
@@ -33,7 +44,7 @@ class Sentra(Node):
 
 
 def main(args=None):
-    print("*** Sentra Started! ***")
+    print("*** Sentra Started! ***\n")
 
     # Variables
     node = None
@@ -59,7 +70,7 @@ def main(args=None):
         dpg.destroy_context()
         if node is not None:
             node.destroy_node()
-        print("*** Sentra Shutdown Complete! ***")
+        print("\n*** Sentra Shutdown Complete! ***")
         rclpy.shutdown()
 
 

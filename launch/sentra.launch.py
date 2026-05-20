@@ -8,7 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     # Declare launch arguments
-    node_name_arg = DeclareLaunchArgument("node_name", default_value="sentra")
+    node_name_arg = DeclareLaunchArgument("node_name", default_value="sentra_ros")
 
     # Set path to the config file
     config_file_path = os.path.join(
@@ -23,7 +23,9 @@ def generate_launch_description():
                 executable="sentra_node",
                 name=LaunchConfiguration("node_name"),
                 output="screen",
-                parameters=[config_file_path],
+                parameters=[
+                    config_file_path,
+                ],
             ),
         ]
     )

@@ -12,6 +12,11 @@ class SentraGUI:
         self.setup_gui()
 
     def setup_gui(self):
+        # Variables
+        logger = self.node.get_logger()
+        if logger:
+            logger.info("Loading Sentra GUI...")
+
         dpg.create_context()
 
         # GUI Layout

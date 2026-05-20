@@ -7,6 +7,8 @@ ui_colors = {
     "orange": [245, 135, 40],
 }
 
+llm_models = ["st-small"]
+
 
 def monitorParams(logger=None):
     """

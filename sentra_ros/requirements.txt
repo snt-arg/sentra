@@ -1,2 +1,6 @@
+numpy==2.4.3
+scipy==1.17.0
 pandas==3.0.2
+pillow==12.1.1
 dearpygui==2.2
+transformers==5.7.0

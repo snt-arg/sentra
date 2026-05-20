@@ -3,5 +3,6 @@ sentra_ros:
     # General Parameters
     node_name: "sentra"
     init_check: true
-    # Text Embeddings
-    llm_model: "st-smalla"
+    # Multimodal RAG Parameters
+    rag:
+      model: "siglip"

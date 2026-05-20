@@ -103,7 +103,7 @@ RUN mkdir -p -m 0600 ~/.ssh && ssh-keyscan github.com >> ~/.ssh/known_hosts
 WORKDIR /home/$USERNAME/workspace/src
 RUN --mount=type=ssh git clone git@github.com:snt-arg/sentra.git
 WORKDIR /home/$USERNAME/workspace/src/sentra
-RUN pip3 install --no-cache-dir -r sentra_ros/requirements.txt
+RUN pip3 install --no-cache-dir -r sentra_ros/requirements.txt --ignore-installed
 
 # ----------------
 # Build Workspace

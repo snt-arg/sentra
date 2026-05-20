@@ -5,7 +5,7 @@ import pandas as pd
 from rclpy.node import Node
 import dearpygui.dearpygui as dpg
 from sentra_ros.core.gui import SentraGUI
-from sentra_ros.core.embedding import initRAGModel
+from sentra_ros.core.embedding import MultimodalEncoder
 from ament_index_python import get_package_share_directory
 from sentra_ros.core.utils import cleanMemory, monitorParams
 
@@ -32,7 +32,9 @@ class Sentra(Node):
             cleanMemory(self.get_logger())
 
         # Initialize RAG model
-        initRAGModel(self.embed_model, self.get_logger())
+        self.model = MultimodalEncoder(
+            backbone=self.embed_model, logger=self.get_logger()
+        )
 
         # Variables
         self.query_text_df = pd.DataFrame(columns=["query", "embedding"])
@@ -43,7 +45,7 @@ class Sentra(Node):
 
         # Convert query to embedding
         # start_time = self.get_clock().now()
-        # query_embedding = self.embedding_model.encode(query, normalize_embeddings=True)
+        # query_embedding = self.model.encode(query, normalize_embeddings=True)
         # elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e6
 
         # new_row = pd.DataFrame(

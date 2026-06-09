@@ -44,20 +44,21 @@ class Sentra(Node):
         self.get_logger().info(f"Processing query: {query}")
 
         # Convert query to embedding
-        # start_time = self.get_clock().now()
-        # query_embedding = self.model.encode(query, normalize_embeddings=True)
-        # elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e6
+        start_time = self.get_clock().now()
+        query_embedding = self.model.get_text_embedding(query)
+        elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e6
 
-        # new_row = pd.DataFrame(
-        #     [{"query": query, "embedding": query_embedding.tolist()}]
-        # )
-        # self.query_text_df = pd.concat([self.query_text_df, new_row], ignore_index=True)
+        # Updating the query-embedding dataframe safely
+        new_row = pd.DataFrame(
+            [{"query": query, "embedding": query_embedding.tolist()}]
+        )
+        self.query_text_df = pd.concat([self.query_text_df, new_row], ignore_index=True)
 
         # --- YOUR GENAI / VS-GRAPH LOGIC GOES HERE ---
 
         # Send result back to the UI layout safely
-        # response = f"Embedding vector generated ({len(query_embedding)} dimensions) in {elapsed_time:.1f}ms and cached in RAG registry."
-        gui_handle.append_response("Sentra", "response")
+        response = f"({len(query_embedding)} dims, {elapsed_time:.1f}ms)"
+        gui_handle.append_response("Sentra", response)
 
 
 def main(args=None):

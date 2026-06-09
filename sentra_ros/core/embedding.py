@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from sentra_ros.core.utils import vlm_models
 from transformers import AutoProcessor, AutoModel
 
@@ -8,7 +9,7 @@ class MultimodalEncoder:
         """
         Initializes the multimodal RAG model and loads it onto GPU.
 
-        Parameters:
+        Parameters
         ----------
         backbone (str):
             The name of the backbone model to load. Must be one of the following: {vlm_models}
@@ -48,23 +49,37 @@ class MultimodalEncoder:
                 raise e
 
         if self.logger:
-            self.logger.info(f"Multimodal Encoder {backbone} initialized successfully!")
+            self.logger.info(
+                f"Multimodal Encoder '{backbone}' initialized successfully!"
+            )
 
-    # def get_text_embedding(self, text: str) -> np.ndarray:
-    #     """
-    #     Extracts embedding from a user text query.
-    #     Returns a normalized 1D numpy array.
-    #     """
-    #     # Preprocess text and push tokens to GPU
-    #     inputs = self.processor(text=[text], padding="max_length", return_tensors="pt").to(self.device)
+    def get_text_embedding(self, text: str) -> np.ndarray:
+        """
+        Extracts embedding from a user text query and returns it as a normalized 1D numpy array.
 
-    #     with torch.no_grad():
-    #         # Extract text features
-    #         text_features = self.model.get_text_features(**inputs)
-    #         # Normalize to unit length (critical for exact Cosine Similarity matching later)
-    #         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        Parameters
+        ----------
+        text (str): The input text query to be embedded.
+        """
+        # Preprocess text and push tokens to GPU
+        inputs = self.processor(
+            text=[text], padding="max_length", return_tensors="pt"
+        ).to(self.device)
 
-    #     return text_features.cpu().numpy()[0]
+        with torch.no_grad():
+            # Extract the raw tensor data, convert to float, and detach safely
+            features_output = self.model.get_text_features(**inputs)
+            # Handle HuggingFace container wrapper vs raw tensor safely
+            if hasattr(features_output, "to_tuple"):
+                text_features = features_output.to_tuple()[0].float()
+            else:
+                text_features = features_output.float()
+            # Normalize to unit length (critical for exact Cosine Similarity matching later)
+            text_features = text_features / torch.norm(
+                text_features, dim=-1, keepdim=True
+            )
+
+        return text_features.cpu().numpy()[0]
 
     # def get_image_embedding(self, pil_image: Image.Image) -> np.ndarray:
     #     """

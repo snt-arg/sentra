@@ -3,6 +3,7 @@
 import rclpy
 import pandas as pd
 from rclpy.node import Node
+from sensor_msgs.msg import Image
 import dearpygui.dearpygui as dpg
 from sentra_ros.core.gui import SentraGUI
 from sentra_ros.core.embedding import MultimodalEncoder
@@ -22,6 +23,12 @@ class Sentra(Node):
 
         # Load parameters
         init_check = self.get_parameter("init_check").get_parameter_value().bool_value
+        sub_frequency = (
+            self.get_parameter("data_feed.frequency").get_parameter_value().double_value
+        )
+        visual_topic = (
+            self.get_parameter("data_feed.topic").get_parameter_value().string_value
+        )
         self.embed_model = (
             self.get_parameter("rag.model").get_parameter_value().string_value
         )
@@ -37,10 +44,28 @@ class Sentra(Node):
         )
 
         # Variables
+        self.last_feed_proc_time = None
+        self.processing_interval_ns = sub_frequency * 1e9
         self.query_text_df = pd.DataFrame(columns=["query", "embedding"])
         self.kf_visual_df = pd.DataFrame(columns=["node_id", "timestamp", "embedding"])
 
+        # Subscribers
+        self.image_sub = self.create_subscription(
+            Image, visual_topic, self.image_callback, 10
+        )
+        self.get_logger().info(f"Subscribed to {visual_topic} at {sub_frequency} Hz")
+
     def process_query(self, query, gui_handle):
+        """
+        Process a text query and update the UI with the results.
+
+        Parameters
+        ----------
+        query: str
+            The text query to process.
+        gui_handle: SentraGUI
+            The GUI handle for updating the UI.
+        """
         self.get_logger().info(f"Processing query: {query}")
 
         # Convert query to embedding
@@ -54,11 +79,38 @@ class Sentra(Node):
         )
         self.query_text_df = pd.concat([self.query_text_df, new_row], ignore_index=True)
 
-        # --- YOUR GENAI / VS-GRAPH LOGIC GOES HERE ---
-
         # Send result back to the UI layout safely
         response = f"({len(query_embedding)} dims, {elapsed_time:.1f}ms)"
         gui_handle.append_response("Sentra", response)
+
+    def image_callback(self, image_msg):
+        """
+        Callback function for handling incoming image messages.
+
+        Parameters
+        ----------
+        image_msg: Image
+            The incoming image message.
+        """
+        # Variables
+        current_time = self.get_clock().now()
+
+        # Enforce the rate drop condition
+        if self.last_feed_proc_time is not None:
+            time_delta = (current_time - self.last_feed_proc_time).nanoseconds
+            if time_delta < self.processing_interval_ns:
+                return  # Skip this frame (throttling)
+
+        # Update the timestamp mark
+        self.last_feed_proc_time = current_time
+        
+        # Convert image to embedding
+        start_time = self.get_clock().now()
+        img_embedding = self.model.get_image_embedding(image_msg)
+        elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e6
+
+        # Send result back to the UI layout safely
+        response = f"({len(img_embedding)} dims, {elapsed_time:.1f}ms)"
 
 
 def main(args=None):

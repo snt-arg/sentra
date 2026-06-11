@@ -57,6 +57,9 @@ class SentraGUI:
         dpg.show_viewport()
         dpg.set_primary_window("MainWindow", True)
 
+        if logger:
+            logger.info("Sentra GUI initialized and ready!")
+
     def on_submit(self, sender, app_data=None, *args, **kwargs):
         query = dpg.get_value("user_input")
         if not query.strip():

@@ -6,3 +6,8 @@ sentra_ros:
     # Multimodal RAG Parameters
     rag:
       model: "siglip"
+    # Data Parameters
+    data_feed:
+      # Visual Feed Parameters
+      topic: "/camera/realsense/color/image_raw"
+      frequency: 2.0

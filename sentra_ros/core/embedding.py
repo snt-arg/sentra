@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+from sensor_msgs.msg import Image
+from PIL import Image as PILImage
 from sentra_ros.core.utils import vlm_models
 from transformers import AutoProcessor, AutoModel
 
@@ -81,18 +83,44 @@ class MultimodalEncoder:
 
         return text_features.cpu().numpy()[0]
 
-    # def get_image_embedding(self, pil_image: Image.Image) -> np.ndarray:
-    #     """
-    #     Extracts embedding from an RGB image (PIL Image object).
-    #     Returns a normalized 1D numpy array.
-    #     """
-    #     # Preprocess image (resizes to 224x224, normalizes channels) and push to GPU
-    #     inputs = self.processor(images=pil_image, return_tensors="pt").to(self.device)
+    def get_image_embedding(self, image_msg: Image) -> np.ndarray:
+        """
+        Extracts embedding from an RGB image (PIL Image object).
+        Returns a normalized 1D numpy array.
+        """
+        try:
+            # Get the OpenCV image from the ROS Image message
+            img_array = np.frombuffer(image_msg.data, dtype=np.uint8)
+            img_matrix = img_array.reshape((image_msg.height, image_msg.width, 3))
 
-    #     with torch.no_grad():
-    #         # Extract image features
-    #         image_features = self.model.get_image_features(**inputs)
-    #         # Normalize to unit length
-    #         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
+            # Convert to RGB representation
+            if "bgr" in image_msg.encoding.lower():
+                img_matrix = img_matrix[:, :, ::-1]
 
-    #     return image_features.cpu().numpy()[0]
+            # Cast natively to PIL
+            pil_img = PILImage.fromarray(img_matrix)
+
+            # Preprocess text and push tokens to GPU
+            inputs = self.processor(images=pil_img, return_tensors="pt").to(self.device)
+
+            with torch.no_grad():
+                features_output = self.model.get_image_features(**inputs)
+
+                # Extract underlying tensor safely depending on Hugging Face version output wrap
+                if hasattr(features_output, "to_tuple"):
+                    img_embedding = features_output.to_tuple()[0].float()
+                else:
+                    img_embedding = features_output.float()
+
+                # Normalize to unit length
+                img_embedding = img_embedding / torch.norm(
+                    img_embedding, dim=-1, keepdim=True
+                )
+
+            # Extract embeddings
+            return img_embedding.cpu().numpy()[0]
+        
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Failed to process callback image: {e}")
+            return []

@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 
+"""
+⚜️ Sentra ⚜️
+------------
+* SPDX-FileCopyrightText: 2023-2026 University of Luxembourg
+* SPDX-License-Identifier: SDF26-0040
+* © 2023-2026 University of Luxembourg
+* Developed by: Ali Tourani at SnT/ARG
+* Sentra is licensed under the GPL 3.0 License
+* (Check LICENSE file for details)
+"""
+
 import rclpy
 import pandas as pd
 from rclpy.node import Node
@@ -103,7 +114,7 @@ class Sentra(Node):
 
         # Update the timestamp mark
         self.last_feed_proc_time = current_time
-        
+
         # Convert image to embedding
         start_time = self.get_clock().now()
         img_embedding = self.model.get_image_embedding(image_msg)

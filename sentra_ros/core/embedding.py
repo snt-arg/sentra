@@ -1,3 +1,14 @@
+"""
+⚜️ Sentra ⚜️
+------------
+* SPDX-FileCopyrightText: 2023-2026 University of Luxembourg
+* SPDX-License-Identifier: SDF26-0040
+* © 2023-2026 University of Luxembourg
+* Developed by: Ali Tourani at SnT/ARG
+* Sentra is licensed under the GPL 3.0 License
+* (Check LICENSE file for details)
+"""
+
 import torch
 import numpy as np
 from sensor_msgs.msg import Image
@@ -119,7 +130,7 @@ class MultimodalEncoder:
 
             # Extract embeddings
             return img_embedding.cpu().numpy()[0]
-        
+
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Failed to process callback image: {e}")

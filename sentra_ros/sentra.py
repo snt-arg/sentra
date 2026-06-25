@@ -58,7 +58,7 @@ class Sentra(Node):
         self.last_feed_proc_time = None
         self.processing_interval_ns = sub_frequency * 1e9
         self.query_text_df = pd.DataFrame(columns=["query", "embedding"])
-        self.kf_visual_df = pd.DataFrame(columns=["node_id", "timestamp", "embedding"])
+        self.kf_visual_df = pd.DataFrame(columns=["kf_id", "timestamp", "embedding"])
 
         # Subscribers
         self.image_sub = self.create_subscription(
@@ -77,7 +77,7 @@ class Sentra(Node):
         gui_handle: SentraGUI
             The GUI handle for updating the UI.
         """
-        self.get_logger().info(f"Processing query: {query}")
+        self.get_logger().info(f"Processing text query '{query}' ...")
 
         # Convert query to embedding
         start_time = self.get_clock().now()
@@ -91,7 +91,7 @@ class Sentra(Node):
         self.query_text_df = pd.concat([self.query_text_df, new_row], ignore_index=True)
 
         # Send result back to the UI layout safely
-        response = f"({len(query_embedding)} dims, {elapsed_time:.1f}ms)"
+        response = f"Query embedding extracted ({len(query_embedding)} dims, {elapsed_time:.1f}ms)!"
         gui_handle.append_response("Sentra", response)
 
     def image_callback(self, image_msg):
@@ -107,6 +107,7 @@ class Sentra(Node):
         current_time = self.get_clock().now()
 
         # Enforce the rate drop condition
+        # [TEMP] Should get all KeyFrames of vS-Graphs
         if self.last_feed_proc_time is not None:
             time_delta = (current_time - self.last_feed_proc_time).nanoseconds
             if time_delta < self.processing_interval_ns:
@@ -120,8 +121,22 @@ class Sentra(Node):
         img_embedding = self.model.get_image_embedding(image_msg)
         elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e6
 
+        # Updating the keyframe-embedding dataframe safely
+        new_row = pd.DataFrame(
+            [
+                {
+                    "kf_id": -1,  # Placeholder for KeyFrame ID (to be updated with actual ID)
+                    "timestamp": image_msg.header.stamp.sec
+                    + image_msg.header.stamp.nanosec * 1e-9,
+                    "embedding": img_embedding.tolist(),
+                }
+            ]
+        )
+        self.kf_visual_df = pd.concat([self.kf_visual_df, new_row], ignore_index=True)
+
         # Send result back to the UI layout safely
-        response = f"({len(img_embedding)} dims, {elapsed_time:.1f}ms)"
+        response = f"Image embedding extracted ({len(img_embedding)} dims, {elapsed_time:.1f}ms)!"
+        self.get_logger().info(response)
 
 
 def main(args=None):

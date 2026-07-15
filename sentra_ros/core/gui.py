@@ -50,9 +50,7 @@ class SentraGUI:
                                 "[Sentra]: I am ready for your queries...",
                                 color=ui_colors["orange"],
                             )
-
                         dpg.add_separator()
-
                         # Input row
                         with dpg.group(horizontal=True):
                             dpg.add_input_text(
@@ -66,17 +64,23 @@ class SentraGUI:
 
                     # Tab 2: Embeddings Registry
                     with dpg.tab(label="Embeddings", tag="embeddings_tab"):
+                        # Text Queries Section
                         dpg.add_text(
-                            "Cached Query Text Registry", color=ui_colors["orange"]
+                            "Text Embeddings Registry:", color=ui_colors["orange"]
                         )
-                        dpg.add_separator()
+                        with dpg.child_window(height=200, tag="text_embeddings_panel"):
+                            pass
 
-                        # Scrollable panel containing the tabular Pandas values
+                        dpg.add_spacer(height=10)
+
+                        # Visual ROS Keyframes Section
+                        dpg.add_text(
+                            "Visual Embeddings Registry:", color=ui_colors["orange"]
+                        )
                         with dpg.child_window(
-                            height=410, tag="embeddings_scroll_panel"
+                            height=200, tag="visual_embeddings_panel"
                         ):
-                            # We will draw the table dynamically here
-                            self.update_embeddings_table()
+                            pass
         except Exception as e:
             print(f"[Error] Error setting up the GUI: {e}")
             return
@@ -109,65 +113,111 @@ class SentraGUI:
         )
         dpg.set_y_scroll("chat_history", dpg.get_y_scroll_max("chat_history"))
 
-    def update_embeddings_table(self):
+    def update_embeddings_tables(self):
         """
-        Rebuilds the table inside the embeddings scroll panel with current dataframe values.
+        Rebuilds both the Text Query registry table and the Visual rosbag keyframe table
+        inside their respective scroll panels with current dataframe values.
         """
-        # Delete the old table if it exists to avoid duplication
-        if dpg.does_item_exist("query_embeddings_table"):
-            dpg.delete_item("query_embeddings_table")
+        # Render Text Embeddings Table
+        if dpg.does_item_exist("text_embeddings_table"):
+            dpg.delete_item("text_embeddings_table")
 
-        # Fetch the DataFrame from the ROS Node parent reference
-        df = self.node.query_text_df
+        text_df = self.node.query_text_df
 
-        # If the DataFrame is empty, show a placeholder message
-        if df.empty:
-            with dpg.group(
-                parent="embeddings_scroll_panel", tag="query_embeddings_table"
-            ):
+        if text_df.empty:
+            with dpg.group(parent="text_embeddings_panel", tag="text_embeddings_table"):
                 dpg.add_text(
                     "No cached query text embeddings found yet.", color=[120, 120, 120]
                 )
-            return
+        else:
+            with dpg.table(
+                resizable=True,
+                header_row=True,
+                borders_outerH=True,
+                borders_innerV=True,
+                borders_innerH=True,
+                tag="text_embeddings_table",
+                parent="text_embeddings_panel",
+                policy=dpg.mvTable_SizingStretchProp,
+            ):
+                dpg.add_table_column(label="Query Text", init_width_or_weight=0.4)
+                dpg.add_table_column(
+                    label="Embedding Stats (SigLIP)", init_width_or_weight=0.6
+                )
 
-        # Build the fresh table
-        with dpg.table(
-            header_row=True,
-            resizable=True,
-            policy=dpg.mvTable_SizingStretchProp,
-            borders_outerH=True,
-            borders_innerV=True,
-            borders_innerH=True,
-            parent="embeddings_scroll_panel",
-            tag="query_embeddings_table",
-        ):
-            # Column definitions
-            dpg.add_table_column(label="Query", init_width_or_weight=0.4)
-            dpg.add_table_column(
-                label="Embedding Preview", init_width_or_weight=0.6
-            )
+                for index, row in text_df.iterrows():
+                    with dpg.table_row():
+                        dpg.add_text(str(row["query"]), wrap=180)
 
-            # Populate rows
-            for index, row in df.iterrows():
-                with dpg.table_row():
-                    # Display the input text query
-                    dpg.add_text(str(row["query"]), wrap=180)
-                    
-                    vector = row["embedding"]
-                    # Safely flatten the list if it is nested
-                    if isinstance(vector[0], list):
-                        flat_vector = vector[0]
-                    else:
-                        flat_vector = vector
+                        vector = row["embedding"]
+                        if isinstance(vector, list) and len(vector) > 0:
+                            # Safely flatten the list if it is nested
+                            flat_vector = (
+                                vector[0] if isinstance(vector[0], list) else vector
+                            )
+                            float_vector = [float(v) for v in flat_vector]
 
-                    # Cast to float safely
-                    float_vector = [float(v) for v in flat_vector]
-                        
-                    # Calculate text statistics
-                    v_mean = sum(float_vector) / len(float_vector)
-                    v_min = min(float_vector)
-                    v_max = max(float_vector)
-                    
-                    # Display clean statistical fingerprint
-                    stats_text = f"Mean: {v_mean:+.4f}, Range: [{v_min:.3f} to {v_max:.3f}]"
-                    dpg.add_text(stats_text, wrap=280)
+                            # Calculate stats
+                            v_mean = sum(float_vector) / len(float_vector)
+                            v_min = min(float_vector)
+                            v_max = max(float_vector)
+
+                            stats_text = f"Mean: {v_mean:+.4f}\nRange: [{v_min:.3f} to {v_max:.3f}] ({len(float_vector)} dims)"
+                            dpg.add_text(stats_text, wrap=280, color=[150, 200, 255])
+                        else:
+                            dpg.add_text("Empty Vector", color=[120, 120, 120])
+
+        # Render Visual Embeddings Table
+        if dpg.does_item_exist("visual_embeddings_table"):
+            dpg.delete_item("visual_embeddings_table")
+
+        visual_df = self.node.kf_visual_df
+
+        if visual_df.empty:
+            with dpg.group(
+                parent="visual_embeddings_panel", tag="visual_embeddings_table"
+            ):
+                dpg.add_text(
+                    "No keyframe visual embeddings captured yet.", color=[120, 120, 120]
+                )
+        else:
+            with dpg.table(
+                resizable=True,
+                header_row=True,
+                borders_outerH=True,
+                borders_innerV=True,
+                borders_innerH=True,
+                tag="visual_embeddings_table",
+                parent="visual_embeddings_panel",
+                policy=dpg.mvTable_SizingStretchProp,
+            ):
+                dpg.add_table_column(label="Frame", init_width_or_weight=0.1)
+                dpg.add_table_column(label="Timestamp", init_width_or_weight=0.3)
+                dpg.add_table_column(
+                    label="Embedding Stats (Visual)", init_width_or_weight=0.6
+                )
+
+                for index, row in visual_df.iterrows():
+                    with dpg.table_row():
+                        # Format node ID and frame stamp
+                        dpg.add_text(row["kf_id"], wrap=90)
+                        dpg.add_text(row["timestamp"], wrap=90)
+
+                        vector = row["embedding"]
+                        if isinstance(vector, list) and len(vector) > 0:
+                            # Safely flatten the list if it is nested
+                            flat_vector = (
+                                vector[0] if isinstance(vector[0], list) else vector
+                            )
+                            float_vector = [float(v) for v in flat_vector]
+
+                            # Calculate stats
+                            v_mean = sum(float_vector) / len(float_vector)
+                            v_min = min(float_vector)
+                            v_max = max(float_vector)
+
+                            stats_text = f"Mean: {v_mean:+.4f}\nRange: [{v_min:.3f} to {v_max:.3f}] ({len(float_vector)} dims)"
+                            dpg.add_text(stats_text, wrap=280, color=[180, 255, 180])
+                        else:
+                            dpg.add_text("Empty Vector", color=[120, 120, 120])
+                        dpg.add_text("Empty Vector", color=[120, 120, 120])

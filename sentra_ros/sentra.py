@@ -96,7 +96,7 @@ class Sentra(Node):
         )
         self.get_logger().info(response)
         gui_handle.append_response("Sentra", response)
-        gui_handle.update_embeddings_table()
+        gui_handle.update_embeddings_tables()
 
     def image_callback(self, image_msg):
         """
@@ -141,6 +141,11 @@ class Sentra(Node):
         # Send result back to the UI layout safely
         response = f"Image embedding extracted ({len(img_embedding)} dims, {elapsed_time:.1f}ms)!"
         self.get_logger().info(response)
+
+        # Update the GUI if it exists
+        if hasattr(self, 'gui') and self.gui is not None:
+            if not isinstance(self.gui, dict) and hasattr(self.gui, 'update_embeddings_tables'):
+                self.gui.update_embeddings_tables()
 
 
 def main(args=None):

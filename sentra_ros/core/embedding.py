@@ -76,7 +76,11 @@ class MultimodalEncoder:
         """
         # Preprocess text and push tokens to GPU
         inputs = self.processor(
-            text=[text], padding="max_length", return_tensors="pt"
+            text=[text],
+            max_length=64,
+            truncation=True,
+            return_tensors="pt",
+            padding="max_length",
         ).to(self.device)
 
         with torch.no_grad():

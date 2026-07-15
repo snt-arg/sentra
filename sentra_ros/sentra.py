@@ -55,8 +55,10 @@ class Sentra(Node):
         )
 
         # Variables
+        self.gui = None
         self.last_feed_proc_time = None
         self.processing_interval_ns = sub_frequency * 1e9
+        self.gui_timer = self.create_timer(2.0, self.timer_gui_callback)
         self.query_text_df = pd.DataFrame(columns=["query", "embedding"])
         self.kf_visual_df = pd.DataFrame(columns=["kf_id", "timestamp", "embedding"])
 
@@ -65,6 +67,17 @@ class Sentra(Node):
             Image, visual_topic, self.image_callback, 10
         )
         self.get_logger().info(f"Subscribed to {visual_topic} at {sub_frequency} Hz")
+
+    def timer_gui_callback(self):
+        """
+        Timer callback that periodically pushes updates of embeddings to the active GUI layout.
+        """
+        if hasattr(self, "gui") and self.gui is not None:
+            # Check if self.gui is fully initialized and not a dummy dict
+            if not isinstance(self.gui, dict) and hasattr(
+                self.gui, "update_embeddings_tables"
+            ):
+                self.gui.update_embeddings_tables()
 
     def process_query(self, query, gui_handle):
         """
@@ -96,7 +109,6 @@ class Sentra(Node):
         )
         self.get_logger().info(response)
         gui_handle.append_response("Sentra", response)
-        gui_handle.update_embeddings_tables()
 
     def image_callback(self, image_msg):
         """
@@ -141,11 +153,6 @@ class Sentra(Node):
         # Send result back to the UI layout safely
         response = f"Image embedding extracted ({len(img_embedding)} dims, {elapsed_time:.1f}ms)!"
         self.get_logger().info(response)
-
-        # Update the GUI if it exists
-        if hasattr(self, 'gui') and self.gui is not None:
-            if not isinstance(self.gui, dict) and hasattr(self.gui, 'update_embeddings_tables'):
-                self.gui.update_embeddings_tables()
 
 
 def main(args=None):

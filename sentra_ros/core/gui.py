@@ -20,6 +20,7 @@ class SentraGUI:
         can interact with ROS parameters, logging, and processing.
         """
         self.node = ros_node
+        self.node.gui = self
         self.setup_gui()
 
     def setup_gui(self):
@@ -192,7 +193,7 @@ class SentraGUI:
                 policy=dpg.mvTable_SizingStretchProp,
             ):
                 dpg.add_table_column(label="Frame", init_width_or_weight=0.1)
-                dpg.add_table_column(label="Time", init_width_or_weight=0.3)
+                dpg.add_table_column(label="Rel. Time", init_width_or_weight=0.3)
                 dpg.add_table_column(
                     label="Embedding Stats (Visual)", init_width_or_weight=0.6
                 )

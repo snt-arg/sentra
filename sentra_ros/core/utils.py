@@ -52,8 +52,8 @@ def timestamp_to_time(timestamp) -> str:
         seconds_float = float(timestamp)
         # Convert to a local datetime object
         dt_object = datetime.datetime.fromtimestamp(seconds_float)
-        # Format to time-only: Hours:Minutes:Seconds.Milliseconds (3 decimal places)
-        return dt_object.strftime("%H:%M:%S.%f")[:-3]
+        # Format to time-only: Minutes:Seconds.Milliseconds (3 decimal places)
+        return dt_object.strftime("%M:%S.%f")[:-3]
     except (ValueError, TypeError) as e:
         # Fallback to a string conversion if input is corrupted
         return f"Invalid Stamp ({timestamp})"

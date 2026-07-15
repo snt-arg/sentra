@@ -10,7 +10,7 @@
 """
 
 import dearpygui.dearpygui as dpg
-from sentra_ros.core.utils import ui_colors
+from sentra_ros.core.utils import ui_colors, timestamp_to_time
 
 
 class SentraGUI:
@@ -192,7 +192,7 @@ class SentraGUI:
                 policy=dpg.mvTable_SizingStretchProp,
             ):
                 dpg.add_table_column(label="Frame", init_width_or_weight=0.1)
-                dpg.add_table_column(label="Timestamp", init_width_or_weight=0.3)
+                dpg.add_table_column(label="Time", init_width_or_weight=0.3)
                 dpg.add_table_column(
                     label="Embedding Stats (Visual)", init_width_or_weight=0.6
                 )
@@ -201,7 +201,7 @@ class SentraGUI:
                     with dpg.table_row():
                         # Format node ID and frame stamp
                         dpg.add_text(row["kf_id"], wrap=90)
-                        dpg.add_text(row["timestamp"], wrap=90)
+                        dpg.add_text(timestamp_to_time(row["timestamp"]), wrap=90)
 
                         vector = row["embedding"]
                         if isinstance(vector, list) and len(vector) > 0:

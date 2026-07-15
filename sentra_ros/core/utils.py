@@ -11,6 +11,7 @@
 
 import gc
 import torch
+import datetime
 import torchvision
 
 ui_colors = {
@@ -39,3 +40,20 @@ def cleanMemory(logger=None):
     gc.collect()
     if logger:
         logger.info("* Memory cleaned! \n")
+
+
+def timestamp_to_time(timestamp) -> str:
+    """Converts a ROS float/string epoch timestamp into a highly readable time-only format
+
+    (HH:MM:SS.mmm).
+    """
+    try:
+        # Cover both string ("1784116342.747868895") and raw float inputs
+        seconds_float = float(timestamp)
+        # Convert to a local datetime object
+        dt_object = datetime.datetime.fromtimestamp(seconds_float)
+        # Format to time-only: Hours:Minutes:Seconds.Milliseconds (3 decimal places)
+        return dt_object.strftime("%H:%M:%S.%f")[:-3]
+    except (ValueError, TypeError) as e:
+        # Fallback to a string conversion if input is corrupted
+        return f"Invalid Stamp ({timestamp})"

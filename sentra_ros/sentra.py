@@ -77,7 +77,7 @@ class Sentra(Node):
         gui_handle: SentraGUI
             The GUI handle for updating the UI.
         """
-        self.get_logger().info(f"Processing text query '{query}' ...")
+        self.get_logger().info(f"Received text query '{query}' ...")
 
         # Convert query to embedding
         start_time = self.get_clock().now()
@@ -91,8 +91,12 @@ class Sentra(Node):
         self.query_text_df = pd.concat([self.query_text_df, new_row], ignore_index=True)
 
         # Send result back to the UI layout safely
-        response = f"Query embedding extracted ({len(query_embedding)} dims, {elapsed_time:.1f}ms)!"
+        response = (
+            f"Extracted embedding ({len(query_embedding)} dims, {elapsed_time:.1f}ms)!"
+        )
+        self.get_logger().info(response)
         gui_handle.append_response("Sentra", response)
+        gui_handle.update_embeddings_table()
 
     def image_callback(self, image_msg):
         """

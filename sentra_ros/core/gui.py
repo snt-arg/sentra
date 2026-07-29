@@ -114,7 +114,7 @@ class SentraGUI:
         dpg.set_primary_window("MainWindow", True)
 
         if logger:
-            logger.info("Sentra GUI initialized and ready!")
+            logger.info("Sentra GUI initialized and ready!\n")
 
     def on_submit(self, sender, app_data=None, *args, **kwargs):
         query = dpg.get_value("user_input")
@@ -279,7 +279,7 @@ class SentraGUI:
         """
         Reads keyframe JPEG files from output directory and populates the Album tab.
         """
-        output_dir = getattr(self.node, "output_dir", None)
+        output_dir = getattr(self.node, "keyframes_dir", None)
         if not output_dir or not os.path.exists(output_dir):
             return
 
@@ -311,8 +311,8 @@ class SentraGUI:
                 if success:
                     self.loaded_textures.add(kf_id)
                     with dpg.group(parent="album_grid", tag=card_tag):
-                        dpg.add_text(f"📷 {img_file}", color=ui_colors["orange"])
+                        dpg.add_text(f"{img_file}", color=ui_colors["orange"])
                         # Render image with standard preview size (160x120)
-                        dpg.add_image(texture_tag, width=160, height=120)
+                        dpg.add_image(texture_tag, width=100, height=90)
                         dpg.add_separator()
                         dpg.add_spacer(height=5)

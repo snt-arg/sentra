@@ -149,7 +149,7 @@ class Sentra(Node):
 
         # Send result back to the UI layout safely
         response = (
-            f"Extracted embedding ({len(query_embedding)} dims, {elapsed_time:.1f}ms)!"
+            f"Extracted text embedding ({len(query_embedding)} dims, {elapsed_time:.1f}ms)!"
         )
         self.get_logger().info(response)
         gui_handle.append_response("Sentra", response)
@@ -229,7 +229,7 @@ class Sentra(Node):
                 pil_img.save(image_path, format="JPEG")
 
             # Send result back to the UI layout safely
-            response = f"Image embedding extracted ({len(img_embedding)} dims, {elapsed_time:.1f}ms)!"
+            response = f"KeyFrame#{self.kf_counter} embedding extracted ({len(img_embedding)} dims, {elapsed_time:.1f}ms)!"
             self.get_logger().info(response)
         except Exception as e:
             response = f"Failed to process image: {e}"

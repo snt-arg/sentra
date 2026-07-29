@@ -77,7 +77,6 @@ class MultimodalEncoder:
         # Preprocess text and push tokens to GPU
         inputs = self.processor(
             text=[text],
-            max_length=64,
             truncation=True,
             return_tensors="pt",
             padding="max_length",
@@ -85,15 +84,15 @@ class MultimodalEncoder:
 
         with torch.no_grad():
             # Extract the raw tensor data, convert to float, and detach safely
-            features_output = self.model.get_text_features(**inputs)
+            text_features = self.model.get_text_features(**inputs)
             # Handle HuggingFace container wrapper vs raw tensor safely
-            if hasattr(features_output, "to_tuple"):
-                text_features = features_output.to_tuple()[0].float()
-            else:
-                text_features = features_output.float()
+            if hasattr(text_features, "pooler_output") and text_features.pooler_output is not None:
+                text_features = text_features.pooler_output
+            elif hasattr(text_features, "to_tuple"):
+                text_features = text_features.to_tuple()[0]
             # If 3D tensor (1, seq_len, dim), mean-pool across sequence dimension
             if text_features.ndim == 3:
-                text_features = text_features.mean(dim=1)
+                text_features = text_features[:, 0, :]
             # L2-normalize to unit length (critical for exact Cosine Similarity matching later)
             text_features = text_features / torch.norm(
                 text_features, dim=-1, keepdim=True
@@ -122,25 +121,25 @@ class MultimodalEncoder:
             inputs = self.processor(images=pil_img, return_tensors="pt").to(self.device)
 
             with torch.no_grad():
-                features_output = self.model.get_image_features(**inputs)
+                img_features = self.model.get_image_features(**inputs)
 
                 # Extract underlying tensor safely depending on Hugging Face version output wrap
-                if hasattr(features_output, "to_tuple"):
-                    img_embedding = features_output.to_tuple()[0].float()
-                else:
-                    img_embedding = features_output.float()
+                if hasattr(img_features, "pooler_output") and img_features.pooler_output is not None:
+                    img_features = img_features.pooler_output
+                elif hasattr(img_features, "to_tuple"):
+                    img_features = img_features.to_tuple()[0]
 
                 # If 3D tensor (1, seq_len, dim), mean-pool across sequence dimension
-                if img_embedding.ndim == 3:
-                    img_embedding = img_embedding.mean(dim=1)
+                if img_features.ndim == 3:
+                    img_features = img_features.mean(dim=1)
 
                 # L2-normalize to unit length
-                img_embedding = img_embedding / torch.norm(
-                    img_embedding, dim=-1, keepdim=True
+                img_features = img_features / torch.norm(
+                    img_features, dim=-1, keepdim=True
                 )
 
             # Extract embeddings
-            return img_embedding.cpu().numpy()[0]
+            return img_features.cpu().numpy()[0]
 
         except Exception as e:
             if self.logger:

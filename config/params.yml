@@ -15,4 +15,12 @@ sentra_ros:
     embedding:
       # Comparison Parameters
       top_k: 5
-      min_similarity: 0.10
+      min_similarity: 0.15
+    # Output Parameters
+    output:
+      # Where to save the keyframes
+      keyframes_path: "output/"
+      # Should the keyframes be saved
+      save_keyframes: true
+      # Should the path be cleared on startup
+      clear_on_startup: true

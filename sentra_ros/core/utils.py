@@ -9,8 +9,10 @@
 * (Check LICENSE file for details)
 """
 
+import os
 import gc
 import torch
+import shutil
 import datetime
 import torchvision
 
@@ -57,3 +59,39 @@ def timestamp_to_time(timestamp) -> str:
     except (ValueError, TypeError) as e:
         # Fallback to a string conversion if input is corrupted
         return f"Invalid Stamp ({timestamp})"
+
+
+def clearKeyFramesDir(path: str, logger=None):
+    """
+    Clears the keyframes directory by deleting all files and subdirectories within it.
+
+    Parameters
+    ----------
+    path (str):
+        The path to the keyframes directory to be cleared.
+    logger (rclpy.logging.Logger, optional):
+        ROS logger for logging messages. If provided, logs the clearing process.
+    """
+    # Check if directory is empty
+    if not os.listdir(path):
+        if logger:
+            logger.info(f"Keyframes directory '{path}' is already empty.")
+        return
+
+    # Otherwise, proceed to clear the directory
+    if logger:
+        logger.info(f"Clearing keyframes directory '{path}' ...")
+    # Empty the directory by deleting all files and subdirectories
+    for filename in os.listdir(path):
+        file_path = os.path.join(path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            if logger:
+                logger.error(f"* Failed to delete {file_path}. Reason: {e}")
+    # Log the completion of the clearing process
+    if logger:
+        logger.info(f"Keyframes directory '{path}' cleared!\n")

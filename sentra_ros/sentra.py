@@ -11,16 +11,19 @@
 * (Check LICENSE file for details)
 """
 
+import os
 import rclpy
+import numpy as np
 import pandas as pd
 from rclpy.node import Node
+from PIL import Image as PILImage
 from sensor_msgs.msg import Image
 import dearpygui.dearpygui as dpg
 from sentra_ros.core.gui import SentraGUI
 from sentra_ros.core.process import searchKeyframes
 from sentra_ros.core.embedding import MultimodalEncoder
 from ament_index_python import get_package_share_directory
-from sentra_ros.core.utils import cleanMemory, monitorParams
+from sentra_ros.core.utils import cleanMemory, monitorParams, clearKeyFramesDir
 
 
 class Sentra(Node):
@@ -52,11 +55,42 @@ class Sentra(Node):
             .get_parameter_value()
             .double_value
         )
+        self.keyframes_dir = (
+            self.get_parameter("output.keyframes_path")
+            .get_parameter_value()
+            .string_value
+        )
+        self.save_keyframes = (
+            self.get_parameter("output.save_keyframes").get_parameter_value().bool_value
+        )
+        clear_on_startup = (
+            self.get_parameter("output.clear_on_startup")
+            .get_parameter_value()
+            .bool_value
+        )
 
         # Initial checks
         if init_check:
             monitorParams(self.get_logger())
             cleanMemory(self.get_logger())
+
+        # Make KeyFrames path absolute and create it if it doesn't exist
+        if not os.path.isabs(self.keyframes_dir):
+            self.keyframes_dir = os.path.join(
+                self.pkg_share_directory, self.keyframes_dir
+            )
+        if not os.path.exists(self.keyframes_dir):
+            os.makedirs(self.keyframes_dir)
+            self.get_logger().info(
+                f"Created saved KeyFrames directory in '{self.keyframes_dir}'!"
+            )
+        else:
+            self.get_logger().info(
+                f"Saved KeyFrames directory is '{self.keyframes_dir}'!"
+            )
+            # Clear keyframes if requested
+            if clear_on_startup:
+                clearKeyFramesDir(self.keyframes_dir, self.get_logger())
 
         # Initialize RAG model
         self.model = MultimodalEncoder(
@@ -65,6 +99,7 @@ class Sentra(Node):
 
         # Variables
         self.gui = None
+        self.kf_counter = -1
         self.last_feed_proc_time = None
         self.processing_interval_ns = sub_frequency * 1e9
         self.gui_timer = self.create_timer(2.0, self.timer_gui_callback)
@@ -127,11 +162,8 @@ class Sentra(Node):
             self.top_k_keyframes,
             self.min_similarity,
         )
-        print(matches_df)
 
-        response = (
-            f"Found {len(matches_df)} matches for query '{query}'."
-        )
+        response = f"Found {len(matches_df)} matches for query '{query}'."
         self.get_logger().info(response)
         gui_handle.append_response("Sentra", response)
 
@@ -157,27 +189,51 @@ class Sentra(Node):
         # Update the timestamp mark
         self.last_feed_proc_time = current_time
 
-        # Convert image to embedding
-        start_time = self.get_clock().now()
-        img_embedding = self.model.get_image_embedding(image_msg)
-        elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e6
+        try:
+            # Preprocess the image and extract embedding
+            img_array = np.frombuffer(image_msg.data, dtype=np.uint8)
+            img_matrix = img_array.reshape((image_msg.height, image_msg.width, 3))
+            rgb_matrix = (
+                img_matrix[:, :, ::-1]
+                if "bgr" in image_msg.encoding.lower()
+                else img_matrix
+            )
+            pil_img = PILImage.fromarray(rgb_matrix)
+            self.kf_counter += 1
 
-        # Updating the keyframe-embedding dataframe safely
-        new_row = pd.DataFrame(
-            [
-                {
-                    "kf_id": -1,  # Placeholder for KeyFrame ID (to be updated with actual ID)
-                    "timestamp": image_msg.header.stamp.sec
-                    + image_msg.header.stamp.nanosec * 1e-9,
-                    "embedding": img_embedding.tolist(),
-                }
-            ]
-        )
-        self.kf_visual_df = pd.concat([self.kf_visual_df, new_row], ignore_index=True)
+            # Convert image to embedding
+            start_time = self.get_clock().now()
+            img_embedding = self.model.get_image_embedding(image_msg)
+            elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e6
 
-        # Send result back to the UI layout safely
-        response = f"Image embedding extracted ({len(img_embedding)} dims, {elapsed_time:.1f}ms)!"
-        self.get_logger().info(response)
+            # Updating the keyframe-embedding dataframe safely
+            new_row = pd.DataFrame(
+                [
+                    {
+                        "kf_id": self.kf_counter,  # [TODO] Placeholder for KeyFrame ID (to be updated with actual ID)
+                        "timestamp": image_msg.header.stamp.sec
+                        + image_msg.header.stamp.nanosec * 1e-9,
+                        "embedding": img_embedding.tolist(),
+                    }
+                ]
+            )
+            self.kf_visual_df = pd.concat(
+                [self.kf_visual_df, new_row], ignore_index=True
+            )
+
+            # Save the keyframe image if requested
+            if self.save_keyframes:
+                image_path = os.path.join(
+                    self.keyframes_dir, f"kf_{self.kf_counter}.jpg"
+                )
+                pil_img.save(image_path, format="JPEG")
+
+            # Send result back to the UI layout safely
+            response = f"Image embedding extracted ({len(img_embedding)} dims, {elapsed_time:.1f}ms)!"
+            self.get_logger().info(response)
+        except Exception as e:
+            response = f"Failed to process image: {e}"
+            self.get_logger().error(f"Failed to process image: {e}")
 
 
 def main(args=None):

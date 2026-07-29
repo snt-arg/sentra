@@ -91,7 +91,10 @@ class MultimodalEncoder:
                 text_features = features_output.to_tuple()[0].float()
             else:
                 text_features = features_output.float()
-            # Normalize to unit length (critical for exact Cosine Similarity matching later)
+            # If 3D tensor (1, seq_len, dim), mean-pool across sequence dimension
+            if text_features.ndim == 3:
+                text_features = text_features.mean(dim=1)
+            # L2-normalize to unit length (critical for exact Cosine Similarity matching later)
             text_features = text_features / torch.norm(
                 text_features, dim=-1, keepdim=True
             )
@@ -127,7 +130,11 @@ class MultimodalEncoder:
                 else:
                     img_embedding = features_output.float()
 
-                # Normalize to unit length
+                # If 3D tensor (1, seq_len, dim), mean-pool across sequence dimension
+                if img_embedding.ndim == 3:
+                    img_embedding = img_embedding.mean(dim=1)
+
+                # L2-normalize to unit length
                 img_embedding = img_embedding / torch.norm(
                     img_embedding, dim=-1, keepdim=True
                 )

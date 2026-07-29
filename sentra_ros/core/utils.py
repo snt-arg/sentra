@@ -75,7 +75,7 @@ def clearKeyFramesDir(path: str, logger=None):
     # Check if directory is empty
     if not os.listdir(path):
         if logger:
-            logger.info(f"Keyframes directory '{path}' is already empty.")
+            logger.info(f"Keyframes directory '{path}' is already empty.\n")
         return
 
     # Otherwise, proceed to clear the directory

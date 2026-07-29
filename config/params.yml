@@ -11,3 +11,8 @@ sentra_ros:
       # Visual Feed Parameters
       topic: "/camera/realsense/color/image_raw"
       frequency: 2.0
+    # Embedding Parameters
+    embedding:
+      # Comparison Parameters
+      top_k: 5
+      min_similarity: 0.10

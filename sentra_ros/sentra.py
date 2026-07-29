@@ -17,6 +17,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 import dearpygui.dearpygui as dpg
 from sentra_ros.core.gui import SentraGUI
+from sentra_ros.core.process import searchKeyframes
 from sentra_ros.core.embedding import MultimodalEncoder
 from ament_index_python import get_package_share_directory
 from sentra_ros.core.utils import cleanMemory, monitorParams
@@ -42,6 +43,14 @@ class Sentra(Node):
         )
         self.embed_model = (
             self.get_parameter("rag.model").get_parameter_value().string_value
+        )
+        self.top_k_keyframes = (
+            self.get_parameter("embedding.top_k").get_parameter_value().integer_value
+        )
+        self.min_similarity = (
+            self.get_parameter("embedding.min_similarity")
+            .get_parameter_value()
+            .double_value
         )
 
         # Initial checks
@@ -106,6 +115,22 @@ class Sentra(Node):
         # Send result back to the UI layout safely
         response = (
             f"Extracted embedding ({len(query_embedding)} dims, {elapsed_time:.1f}ms)!"
+        )
+        self.get_logger().info(response)
+        gui_handle.append_response("Sentra", response)
+
+        # Perform multimodal visual search against node's stored keyframes
+        matches_df = searchKeyframes(
+            query_embedding,
+            self.kf_visual_df,
+            self.get_logger(),
+            self.top_k_keyframes,
+            self.min_similarity,
+        )
+        print(matches_df)
+
+        response = (
+            f"Found {len(matches_df)} matches for query '{query}'."
         )
         self.get_logger().info(response)
         gui_handle.append_response("Sentra", response)

@@ -140,8 +140,6 @@ class SentraGUI:
         Rebuilds both the Text Query registry table and the Visual rosbag keyframe table
         inside their respective scroll panels with current dataframe values.
         """
-        self.update_album_gallery()
-
         # Render Text Embeddings Table
         if dpg.does_item_exist("text_embeddings_table"):
             dpg.delete_item("text_embeddings_table")
@@ -164,10 +162,11 @@ class SentraGUI:
                 parent="text_embeddings_panel",
                 policy=dpg.mvTable_SizingStretchProp,
             ):
-                dpg.add_table_column(label="Query Text", init_width_or_weight=0.4)
+                dpg.add_table_column(label="Query Text", init_width_or_weight=0.3)
                 dpg.add_table_column(
-                    label="Embedding Stats (SigLIP)", init_width_or_weight=0.6
+                    label="Embedding Stats (Text)", init_width_or_weight=0.3
                 )
+                dpg.add_table_column(label="Match Stats", init_width_or_weight=0.4)
 
                 for index, row in text_df.iterrows():
                     with dpg.table_row():
@@ -186,10 +185,12 @@ class SentraGUI:
                             v_min = min(float_vector)
                             v_max = max(float_vector)
 
-                            stats_text = f"Mean: {v_mean:+.4f}\nRange: [{v_min:.3f} to {v_max:.3f}] ({len(float_vector)} dims)"
-                            dpg.add_text(stats_text, wrap=280, color=[150, 200, 255])
+                            stats_text = f"Mean: {v_mean:+.3f}\nRange: [{v_min:.3f} to {v_max:.3f}]\n({len(float_vector)} dims)"
+                            dpg.add_text(stats_text, wrap=180, color=[150, 200, 255])
                         else:
                             dpg.add_text("Empty Vector", color=[120, 120, 120])
+
+                        dpg.add_text(str(row["match"]), wrap=180)
 
         # Render Visual Embeddings Table
         if dpg.does_item_exist("visual_embeddings_table"):

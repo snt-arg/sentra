@@ -116,12 +116,18 @@ class Sentra(Node):
         """
         Timer callback that periodically pushes updates of embeddings to the active GUI layout.
         """
+        # Check if self.gui is fully initialized and not a dummy dict
         if hasattr(self, "gui") and self.gui is not None:
-            # Check if self.gui is fully initialized and not a dummy dict
+            # Loading the embedding table
             if not isinstance(self.gui, dict) and hasattr(
                 self.gui, "update_embeddings_tables"
             ):
                 self.gui.update_embeddings_tables()
+            # Loading the album gallery
+            if not isinstance(self.gui, dict) and hasattr(
+                self.gui, "update_album_gallery"
+            ):
+                self.gui.update_album_gallery()
 
     def process_query(self, query, gui_handle):
         """
@@ -141,16 +147,8 @@ class Sentra(Node):
         query_embedding = self.model.get_text_embedding(query)
         elapsed_time = (self.get_clock().now() - start_time).nanoseconds / 1e6
 
-        # Updating the query-embedding dataframe safely
-        new_row = pd.DataFrame(
-            [{"query": query, "embedding": query_embedding.tolist()}]
-        )
-        self.query_text_df = pd.concat([self.query_text_df, new_row], ignore_index=True)
-
         # Send result back to the UI layout safely
-        response = (
-            f"Extracted text embedding ({len(query_embedding)} dims, {elapsed_time:.1f}ms)!"
-        )
+        response = f"Extracted text embedding ({len(query_embedding)} dims, {elapsed_time:.1f}ms)!"
         self.get_logger().info(response)
         gui_handle.append_response("Sentra", response)
 
@@ -162,6 +160,27 @@ class Sentra(Node):
             self.top_k_keyframes,
             self.min_similarity,
         )
+
+        # Matching results
+        match_text = "No matches found."
+        if not matches_df.empty:
+            match_text = ""
+            for _, row in matches_df.iterrows():
+                match_text += (
+                    f"KF#{row['kf_id']} ({row['similarity']:.3f})\n"
+                )
+
+        # Updating the query-embedding dataframe safely
+        new_row = pd.DataFrame(
+            [
+                {
+                    "query": query,
+                    "embedding": query_embedding.tolist(),
+                    "match": match_text,
+                }
+            ]
+        )
+        self.query_text_df = pd.concat([self.query_text_df, new_row], ignore_index=True)
 
         response = f"Found {len(matches_df)} matches for query '{query}'."
         self.get_logger().info(response)

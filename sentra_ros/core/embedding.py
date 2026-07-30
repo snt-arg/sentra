@@ -86,7 +86,10 @@ class MultimodalEncoder:
             # Extract the raw tensor data, convert to float, and detach safely
             text_features = self.model.get_text_features(**inputs)
             # Handle HuggingFace container wrapper vs raw tensor safely
-            if hasattr(text_features, "pooler_output") and text_features.pooler_output is not None:
+            if (
+                hasattr(text_features, "pooler_output")
+                and text_features.pooler_output is not None
+            ):
                 text_features = text_features.pooler_output
             elif hasattr(text_features, "to_tuple"):
                 text_features = text_features.to_tuple()[0]
@@ -124,7 +127,10 @@ class MultimodalEncoder:
                 img_features = self.model.get_image_features(**inputs)
 
                 # Extract underlying tensor safely depending on Hugging Face version output wrap
-                if hasattr(img_features, "pooler_output") and img_features.pooler_output is not None:
+                if (
+                    hasattr(img_features, "pooler_output")
+                    and img_features.pooler_output is not None
+                ):
                     img_features = img_features.pooler_output
                 elif hasattr(img_features, "to_tuple"):
                     img_features = img_features.to_tuple()[0]

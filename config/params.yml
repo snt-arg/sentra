@@ -15,7 +15,7 @@ sentra_ros:
     embedding:
       # Comparison Parameters
       top_k: 5
-      min_similarity: 0.15
+      min_similarity: 0.08 # SigLIP: 0.08
     # Output Parameters
     output:
       # Where to save the keyframes
